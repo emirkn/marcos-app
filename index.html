@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcos Bot</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: white; padding: 20px; }
+        h2 { color: #00d4ff; margin-bottom: 20px; text-align: center; }
+        .section { background: #16213e; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #00d4ff; background: #0f3460; color: white; margin-bottom: 10px; }
+        button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #00d4ff; color: #1a1a2e; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
+        button:active { opacity: 0.7; }
+        .grup-item { background: #0f3460; padding: 10px; border-radius: 8px; margin-bottom: 8px; }
+        .grup-item span { color: #00d4ff; font-size: 12px; }
+        #sonuc { margin-top: 10px; padding: 10px; background: #0f3460; border-radius: 8px; min-height: 40px; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <h2>🤖 Marcos Bot</h2>
+
+    <div class="section">
+        <h3 style="margin-bottom:10px">Grup Ara</h3>
+        <input type="text" id="aramaInput" placeholder="Anahtar kelime gir..." />
+        <button onclick="araGrup()">🔍 Ara ve Kaydet</button>
+    </div>
+
+    <div class="section">
+        <h3 style="margin-bottom:10px">Mesaj At</h3>
+        <textarea id="mesajInput" rows="4" placeholder="Mesajını yaz..."></textarea>
+        <button onclick="mesajAt()">📨 Tüm Gruplara Gönder</button>
+    </div>
+
+    <div class="section">
+        <h3 style="margin-bottom:10px">Kayıtlı Gruplar</h3>
+        <button onclick="gruplariGetir()">📋 Grupları Listele</button>
+        <div id="grupListesi"></div>
+    </div>
+
+    <div id="sonuc">Hazır.</div>
+
+    <script>
+        const API = 'https://2021-2a00-1d34-48c-4800-e577-2db0-ea97-c8f1.ngrok-free.app';
+
+        async function araGrup() {
+            const kelime = document.getElementById('aramaInput').value;
+            if (!kelime) return;
+            document.getElementById('sonuc').innerText = 'Aranıyor...';
+            try {
+                const res = await fetch(API + '/ara', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({kelime})
+                });
+                const data = await res.json();
+                document.getElementById('sonuc').innerText = `${data.length} grup bulundu ve kaydedildi.`;
+            } catch(e) {
+                document.getElementById('sonuc').innerText = 'Hata: ' + e.message;
+            }
+        }
+
+        async function mesajAt() {
+            const metin = document.getElementById('mesajInput').value;
+            if (!metin) return;
+            document.getElementById('sonuc').innerText = 'Gönderiliyor... (uzun sürebilir)';
+            try {
+                const res = await fetch(API + '/mesaj', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({metin})
+                });
+                const data = await res.json();
+                document.getElementById('sonuc').innerText = `✅ ${data.basarili} gruba gönderildi.`;
+            } catch(e) {
+                document.getElementById('sonuc').innerText = 'Hata: ' + e.message;
+            }
+        }
+
+        async function gruplariGetir() {
+            try {
+                const res = await fetch(API + '/gruplar');
+                const data = await res.json();
+                const liste = document.getElementById('grupListesi');
+                liste.innerHTML = '';
+                data.forEach(g => {
+                    liste.innerHTML += `<div class="grup-item">📌 ${g.title}<br><span>@${g.username} • ${g.members} üye</span></div>`;
+                });
+                document.getElementById('sonuc').innerText = `${data.length} grup listelendi.`;
+            } catch(e) {
+                document.getElementById('sonuc').innerText = 'Hata: ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>
